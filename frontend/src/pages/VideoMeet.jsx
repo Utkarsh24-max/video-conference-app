@@ -284,14 +284,30 @@ export default function VideoMeetComponent() {
 
             socketRef.current.on('chat-message', addMessage)
 
-            socketRef.current.on('user-left', (id) => {
-                setVideos((videos) => videos.filter((video) => video.socketId !== id))
-            })
+           socketRef.current.on('user-left', (id) => {
+
+    if (connections[id]) {
+        connections[id].close();
+        delete connections[id];
+    }
+
+    setVideos(prev =>
+        prev.filter(video => video.socketId !== id)
+    );
+
+    videoRef.current = videoRef.current.filter(
+        video => video.socketId !== id
+    );
+})
 
             socketRef.current.on('user-joined', (id, clients) => {
-                clients.forEach((socketListId) => {
+               clients.forEach((socketListId) => {
 
-                    connections[socketListId] = new RTCPeerConnection(peerConfigConnections)
+    if (socketListId === socketIdRef.current) return;
+
+    if (connections[socketListId]) return;
+
+    connections[socketListId] = new RTCPeerConnection(peerConfigConnections)
                     // Wait for their ice candidate       
                     connections[socketListId].onicecandidate = function (event) {
                         if (event.candidate != null) {
@@ -299,41 +315,41 @@ export default function VideoMeetComponent() {
                         }
                     }
 
-                    // Wait for their video stream
-                    connections[socketListId].onaddstream = (event) => {
-                        console.log("BEFORE:", videoRef.current);
-                        console.log("FINDING ID: ", socketListId);
+                   connections[socketListId].onaddstream = (event) => {
 
-                        let videoExists = videoRef.current.find(video => video.socketId === socketListId);
+    if (!event.stream) return;
 
-                        if (videoExists) {
-                            console.log("FOUND EXISTING");
+    setVideos(prev => {
 
-                            // Update the stream of the existing video
-                            setVideos(videos => {
-                                const updatedVideos = videos.map(video =>
-                                    video.socketId === socketListId ? { ...video, stream: event.stream } : video
-                                );
-                                videoRef.current = updatedVideos;
-                                return updatedVideos;
-                            });
-                        } else {
-                            // Create a new video
-                            console.log("CREATING NEW");
-                            let newVideo = {
-                                socketId: socketListId,
-                                stream: event.stream,
-                                autoplay: true,
-                                playsinline: true
-                            };
+        const existing = prev.find(
+            v => v.socketId === socketListId
+        );
 
-                            setVideos(videos => {
-                                const updatedVideos = [...videos, newVideo];
-                                videoRef.current = updatedVideos;
-                                return updatedVideos;
-                            });
-                        }
-                    };
+        if (existing) {
+            const updated = prev.map(v =>
+                v.socketId === socketListId
+                    ? { ...v, stream: event.stream }
+                    : v
+            );
+
+            videoRef.current = updated;
+            return updated;
+        }
+
+        const updated = [
+            ...prev,
+            {
+                socketId: socketListId,
+                stream: event.stream,
+                autoplay: true,
+                playsinline: true
+            }
+        ];
+
+        videoRef.current = updated;
+        return updated;
+    });
+};
 
 
                     // Add the local video stream
@@ -517,8 +533,10 @@ export default function VideoMeetComponent() {
 
                     <video className={styles.meetUserVideo} ref={localVideoref} autoPlay muted></video>
 
-                    <div className={styles.conferenceView}>
-                        {videos.map((video) => (
+                   <div className={styles.conferenceView}>
+    {videos
+        .filter(video => video.stream)
+        .map((video) => (
                             <div key={video.socketId}>
                                 <video
 
