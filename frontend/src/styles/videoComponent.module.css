@@ -5,12 +5,13 @@
     overflow: hidden;
 }
 
+/* Local user video */
 .meetUserVideo {
     position: absolute;
     bottom: 100px;
     right: 20px;
-    width: 220px;
-    height: 140px;
+    width: 180px;
+    height: 120px;
     object-fit: cover;
     border-radius: 15px;
     border: 2px solid #ff9839;
@@ -18,6 +19,7 @@
     box-shadow: 0 4px 15px rgba(0,0,0,0.4);
 }
 
+/* Bottom Controls */
 .buttonContainers {
     position: absolute;
     bottom: 0;
@@ -33,7 +35,7 @@
 
 .buttonContainers button {
     background: #2c2c2c;
-    transition: 0.3s;
+    transition: all 0.3s ease;
 }
 
 .buttonContainers button:hover {
@@ -44,24 +46,45 @@
     font-size: 2rem;
 }
 
+/* Remote videos area */
 .conferenceView {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 20px;
     padding: 20px;
     height: calc(100vh - 90px);
     overflow-y: auto;
 }
 
-.conferenceView video {
-    width: 100%;
-    height: 250px;
+/* Each participant card */
+.videoCard {
+    position: relative;
+}
+
+.videoCard video {
+    width: 450px;
+    max-width: 100%;
+    height: 280px;
     object-fit: cover;
     border-radius: 15px;
     background: black;
     box-shadow: 0 4px 20px rgba(0,0,0,0.4);
 }
 
+/* Fallback if videoCard isn't used */
+.conferenceView video {
+    width: 450px;
+    max-width: 100%;
+    height: 280px;
+    object-fit: cover;
+    border-radius: 15px;
+    background: black;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+/* Chat panel */
 .chatRoom {
     position: absolute;
     right: 0;
@@ -113,14 +136,16 @@
     color: white !important;
 }
 
+/* Mobile */
 @media (max-width: 768px) {
 
     .conferenceView {
-        grid-template-columns: 1fr;
         padding: 10px;
     }
 
-    .conferenceView video {
+    .conferenceView video,
+    .videoCard video {
+        width: 100%;
         height: 220px;
     }
 
@@ -133,14 +158,4 @@
     .chatRoom {
         width: 100%;
     }
-}
-.videoCard {
-    position: relative;
-}
-
-.videoCard video {
-    width: 100%;
-    height: 250px;
-    object-fit: cover;
-    border-radius: 15px;
 }
